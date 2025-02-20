@@ -56,18 +56,32 @@ def parse_zap_report(file_content):
 
 def analyze_with_gpt(vulnerabilities):
     """
-    Sends vulnerability details to OpenAI's GPT-4o and gets an analysis.
+    Sends structured vulnerability details to OpenAI's GPT-4o and gets an in-depth analysis.
     """
-    prompt = "You are a cybersecurity expert. Analyze the following OWASP ZAP vulnerabilities and suggest fixes:\n\n"
+    prompt = """
+    You are a highly skilled cybersecurity expert specializing in web application security.
+    Your task is to analyze OWASP ZAP scan results, explaining each vulnerability in a **clear, structured, and intuitive** manner.
+
+    ### Response Format:
+    - 📌 **Vulnerability:** <Vulnerability Name>
+    - 🛑 **Risk Level:** <Risk Level>
+    - 📖 **Explanation:** <A concise, easy-to-understand explanation of the vulnerability, how it works, and why it's dangerous.>
+    - 💻 **Code Fix:** (Provide a code snippet inside triple backticks with the appropriate language for syntax highlighting.)
+    - 🔧 **Fix Implementation Guide:** (A step-by-step explanation of how to apply the fix correctly and securely.)
+
+    **Analyze the following vulnerabilities:**
+    """
 
     for vuln in vulnerabilities:
-        prompt += f"Vulnerability: {vuln['name']}\n"
-        prompt += f"Risk Level: {vuln['risk']}\n"
-        prompt += f"Description: {vuln['description']}\n"
-        prompt += f"Solution: {vuln['solution']}\n"
-        prompt += f"Reference: {vuln['reference']}\n\n"
-
-    prompt += "Provide clear, step-by-step fixes for each vulnerability."
+        prompt += f"""
+        📌 **Vulnerability:** {vuln['name']}
+        🛑 **Risk Level:** {vuln['risk']}
+        📖 **Explanation:** {vuln['description']}
+        💻 **Code Fix:** (Provide a properly formatted code block using triple backticks.)
+        🔧 **Fix Implementation Guide:** Explain in a step-by-step manner how to fix this issue.
+        
+        ---
+        """
 
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -75,6 +89,7 @@ def analyze_with_gpt(vulnerabilities):
     )
 
     return response.choices[0].message.content
+
 
 @app.post("/upload/")
 async def upload_zap_report(file: UploadFile = File(...)):
